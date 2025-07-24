@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard | Budget Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen font-sans">
+
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow sticky top-0 z-10">
+        <div class="max-w-4xl mx-auto px-4 relative">
+            <div class="h-16 flex items-center justify-between relative">
+                <!-- App Name (left-aligned) -->
+                <div class="text-teal-500 font-bold text-lg">
+                    Personal Budget Planner
+                </div>
+
+                <!-- Centered Links -->
+                <div class="absolute left-1/2 transform -translate-x-1/2">
+                    <div class="flex space-x-8 text-gray-700 font-medium">
+                        <a href="/dashboard/summary"
+                            class="underline decoration-teal-500 underline-offset-4 decoration-2">Summary</a>
+                        <a href="/dashboard/expenses"
+                            class="hover:underline hover:decoration-blue-600 hover:underline-offset-4">Expenses</a>
+                        <a href="/dashboard/income"
+                            class="hover:underline hover:decoration-blue-600 hover:underline-offset-4">Income</a>
+                        <a href="/dashboard/income"
+                            class="hover:underline hover:decoration-blue-600 hover:underline-offset-4">Budgets</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto mt-8 px-4 space-y-6">
+        <!-- Balance Card -->
+        <div class="bg-teal-500 text-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-bold">Balance</h2>
+            <p class="text-3xl font-semibold">₱{{ remaining_balance }}</p>
+        </div>
+
+        <!-- Totals Section -->
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h3 class="text-lg font-semibold mb-4">Total</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-green-100 p-3 rounded text-green-800">
+                    <h4 class="font-medium">Income</h4>
+                    <p class="text-xl">₱{{ total_income }}</p>
+                </div>
+                <div class="bg-red-100 p-3 rounded text-red-800">
+                    <h4 class="font-medium">Expense</h4>
+                    <p class="text-xl">₱{{ total_expenses }}</p>
+                </div>
+            </div>
+            <div class="mt-4 space-y-2">
+                <h3 class="text-lg font-semibold mb-4">Transactions</h3>
+                {% for tx in transactions %}
+                <div class="flex items-center bg-gray-100 p-2 rounded">
+                    <!-- Category -->
+                    <span class="flex-1">{{ tx.category_name }}</span>
+
+                    <!-- Amount -->
+                    <span
+                        class="{% if tx.type == 'expense' %}text-red-600{% else %}text-blue-600{% endif %} font-medium w-28 text-center">
+                        {% if tx.type == 'expense' %}-{% else %}+{% endif %}₱{{ tx.amount }}
+                    </span>
+
+                    <!-- Date -->
+                    <span class="text-sm text-gray-500 w-40 text-right">
+                        {{ tx.transaction_date.strftime('%d %b %Y') }}
+                        {% if tx.created_at %}
+                        , {{ tx.created_at.strftime('%H:%M') }}
+                        {% endif %}
+                    </span>
+                </div>
+                {% endfor %}
+
+                <!-- View All Button -->
+                <div class="text-right pt-2">
+                    <a href="/dashboard/transactions"
+                        class="inline-block text-blue-600 hover:underline text-sm font-medium">
+                        View All →
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+</body>
+
+</html>
