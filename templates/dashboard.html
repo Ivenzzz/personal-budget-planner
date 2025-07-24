@@ -20,7 +20,7 @@
                 </div>
 
                 <!-- Centered Links -->
-                <div class="absolute left-1/2 transform -translate-x-1/2">
+                <div class="absolute left-3/4 transform -translate-x-1/2">
                     <div class="flex space-x-8 text-gray-700 font-medium">
                         <a href="/dashboard/summary"
                             class="underline decoration-teal-500 underline-offset-4 decoration-2">Summary</a>
@@ -30,6 +30,8 @@
                             class="hover:underline hover:decoration-blue-600 hover:underline-offset-4">Income</a>
                         <a href="/dashboard/income"
                             class="hover:underline hover:decoration-blue-600 hover:underline-offset-4">Budgets</a>
+                        <a href="/dashboard/income"
+                            class="hover:underline hover:decoration-blue-600 hover:underline-offset-4">Categories</a>
                     </div>
                 </div>
             </div>
@@ -47,15 +49,31 @@
         <div class="bg-white p-6 rounded-lg shadow-lg">
             <h3 class="text-lg font-semibold mb-4">Total</h3>
             <div class="grid grid-cols-2 gap-4">
-                <div class="bg-green-100 p-3 rounded text-green-800">
-                    <h4 class="font-medium">Income</h4>
-                    <p class="text-xl">₱{{ total_income }}</p>
+                <!-- Income Card -->
+                <div class="bg-green-100 p-4 rounded-xl text-green-800 flex items-center justify-between shadow-sm">
+                    <div>
+                        <h4 class="font-semibold text-sm uppercase tracking-wide">Income</h4>
+                        <p class="text-2xl font-bold">₱{{ total_income }}</p>
+                    </div>
+                    <a href="/add-income"
+                        class="w-10 h-10 flex items-center justify-center rounded-full bg-green-500 text-white shadow-md hover:bg-green-600 hover:scale-105 transition transform duration-200 ease-in-out focus:ring-2 focus:ring-green-300">
+                        +
+                    </a>
                 </div>
-                <div class="bg-red-100 p-3 rounded text-red-800">
-                    <h4 class="font-medium">Expense</h4>
-                    <p class="text-xl">₱{{ total_expenses }}</p>
+
+                <!-- Expense Card -->
+                <div class="bg-red-100 p-4 rounded-xl text-red-800 flex items-center justify-between shadow-sm">
+                    <div>
+                        <h4 class="font-semibold text-sm uppercase tracking-wide">Expense</h4>
+                        <p class="text-2xl font-bold">₱{{ total_expenses }}</p>
+                    </div>
+                    <a href="/add-expense"
+                        class="w-10 h-10 flex items-center justify-center rounded-full bg-red-500 text-white shadow-md hover:bg-red-600 hover:scale-105 transition transform duration-200 ease-in-out focus:ring-2 focus:ring-red-300">
+                        +
+                    </a>
                 </div>
             </div>
+
             <div class="mt-4 space-y-2">
                 <h3 class="text-lg font-semibold mb-4">Transactions</h3>
                 {% for tx in transactions %}
