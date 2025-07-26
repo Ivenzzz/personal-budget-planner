@@ -2,6 +2,7 @@ import mysql.connector
 import os
 import bcrypt
 from flask import current_app
+from flask import Flask, jsonify
 
 def get_db_connection():
     return mysql.connector.connect(**current_app.config['DB_CONFIG'])
@@ -123,12 +124,94 @@ def get_all_transactions(user_id):
         JOIN categories c ON t.category_id = c.id
         WHERE t.user_id = %s
         ORDER BY t.transaction_date DESC, t.created_at DESC
+        LIMIT 5
     """, (user_id,))
 
     transactions = cursor.fetchall()
     cursor.close()
     conn.close()
     return transactions
+
+
+def get_all_income_categories():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT id, name
+        FROM categories
+        WHERE type = 'income'
+        ORDER BY id ASC
+    """)
+
+    income_categories = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return income_categories
+
+def get_all_expense_categories():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT id, name
+        FROM categories
+        WHERE type = 'expense'
+        ORDER BY id ASC
+    """)
+
+    expenses_categories = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return expenses_categories
+
+
+def add_income(user_id, amount, category_id, transaction_date, description):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        '''
+        INSERT INTO transactions (user_id, category_id, type, amount, transaction_date, description)
+        VALUES (%s, %s, 'income', %s, %s, %s)
+        ''',
+        (user_id, category_id, amount, transaction_date, description)
+    )
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+def get_expense_totals_by_category():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT 
+            c.name AS category_name,
+            SUM(t.amount) AS total_amount
+        FROM transactions t
+        JOIN categories c ON t.category_id = c.id
+        WHERE t.type = 'expense'
+        GROUP BY c.id, c.name
+        ORDER BY total_amount DESC
+    """)
+
+    results = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+    return results
+
+
+
+
+
+
+
+
+
 
 
 

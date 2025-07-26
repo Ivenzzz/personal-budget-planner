@@ -1,5 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, session, url_for, flash
 from app import models
+from datetime import date
+from flask import jsonify
+import json
 
 main = Blueprint('main', __name__, template_folder='../templates')
 
@@ -36,11 +39,67 @@ def dashboard():
     remaining_balance = models.get_remaining_balance(user_id)
     transactions = models.get_all_transactions(user_id)
 
+    income_categories = models.get_all_income_categories()
+    expense_categories = models.get_all_expense_categories()
+
+    expense_totals_by_category = models.get_expense_totals_by_category()
+    expense_totals_json = json.dumps(expense_totals_by_category, default=float)
+
+    current_date = date.today().isoformat()
+
     return render_template('dashboard.html',
                            total_income=total_income,
                            total_expenses=total_expenses,
                            remaining_balance=remaining_balance,
-                           transactions=transactions)
+                           transactions=transactions,
+                           income_categories=income_categories,
+                           expense_categories=expense_categories, 
+                           expense_totals_json=expense_totals_json,
+                           current_date=current_date)
+
+
+@main.route('/add-income', methods=['POST'])
+def add_income():
+    if 'user_id' not in session:
+        return redirect(url_for('main.login'))
+
+    user_id = session['user_id']
+    amount = request.form['amount']
+    category_id = request.form['category_id']
+    transaction_date = request.form['transaction_date']
+    description = request.form.get('description', '')  # <-- Added
+
+    models.add_income(user_id, amount, category_id, transaction_date, description)  # <-- Updated
+
+    flash("Income added successfully!")
+    return redirect(url_for('main.dashboard'))
+
+
+@main.route('/add-expense', methods=['POST'])
+def add_expense():
+    if 'user_id' not in session:
+        return redirect(url_for('main.login'))
+
+    user_id = session['user_id']
+    amount = request.form['amount']
+    category_id = request.form['category_id']
+    description = request.form.get('description', '')
+    transaction_date = request.form['transaction_date']
+
+    models.add_transaction(user_id, category_id, 'expense', amount, description, transaction_date)
+    flash("Expense added successfully!")
+    return redirect(url_for('main.dashboard'))
+
+@main.route('/api/expense-totals', methods=['GET'])
+def expense_totals():
+    try:
+        data = models.get_expense_totals_by_category()
+        return jsonify(data), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+
 
 
 

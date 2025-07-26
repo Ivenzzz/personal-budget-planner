@@ -5,90 +5,105 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard | Budget Planner</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootswatch@4.5.2/dist/lumen/bootstrap.min.css" rel="stylesheet">
 </head>
 
-<body class="bg-gray-100 min-h-screen font-sans">
+<body class="container">
 
     <!-- Navigation Bar -->
-    <nav class="bg-white shadow sticky top-0 z-10">
-        <div class="max-w-4xl mx-auto px-4 relative">
-            <div class="h-16 flex items-center justify-between relative">
-                <!-- App Name (left-aligned) -->
-                <div class="text-teal-500 font-bold text-lg">
-                    Personal Budget Planner
-                </div>
-
-                <!-- Centered Links -->
-                <div class="absolute left-3/4 transform -translate-x-1/2">
-                    <div class="flex space-x-8 text-gray-700 font-medium">
-                        <a href="/dashboard/summary"
-                            class="underline decoration-teal-500 underline-offset-4 decoration-2">Summary</a>
-                        <a href="/dashboard/expenses"
-                            class="hover:underline hover:decoration-blue-600 hover:underline-offset-4">Expenses</a>
-                        <a href="/dashboard/income"
-                            class="hover:underline hover:decoration-blue-600 hover:underline-offset-4">Income</a>
-                        <a href="/dashboard/income"
-                            class="hover:underline hover:decoration-blue-600 hover:underline-offset-4">Budgets</a>
-                        <a href="/dashboard/income"
-                            class="hover:underline hover:decoration-blue-600 hover:underline-offset-4">Categories</a>
-                    </div>
-                </div>
+    <nav class="navbar navbar-expand-lg bg-white shadow sticky-top">
+        <div class="container">
+            <a class="navbar-brand text-primary fw-bold" href="#">Personal Budget Planner</a>
+            <div class="collapse navbar-collapse justify-content-center">
+                <ul class="navbar-nav gap-3">
+                    <li class="nav-item">
+                        <a class="nav-link active text-primary fw-medium" href="/dashboard/summary">Summary</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="/dashboard/expenses">Expenses</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="/dashboard/income">Income</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="/dashboard/income">Budgets</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="/dashboard/income">Categories</a>
+                    </li>
+                </ul>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-4xl mx-auto mt-8 px-4 space-y-6">
+    <main class="container mt-4">
         <!-- Balance Card -->
-        <div class="bg-teal-500 text-white p-6 rounded-lg shadow-lg">
-            <h2 class="text-2xl font-bold">Balance</h2>
-            <p class="text-3xl font-semibold">₱{{ remaining_balance }}</p>
+        <div class="bg-primary text-white p-4 rounded shadow-sm mb-4">
+            <h2 class="fs-4 fw-bold">Balance</h2>
+            <h3 class="fw-semibold">₱{{ "{:,.2f}".format(remaining_balance) }}</h3>
         </div>
 
         <!-- Totals Section -->
-        <div class="bg-white p-6 rounded-lg shadow-lg">
-            <h3 class="text-lg font-semibold mb-4">Total</h3>
-            <div class="grid grid-cols-2 gap-4">
+        <div class="bg-white p-4 rounded shadow mb-4">
+            <div class="row g-3">
                 <!-- Income Card -->
-                <div class="bg-green-100 p-4 rounded-xl text-green-800 flex items-center justify-between shadow-sm">
-                    <div>
-                        <h4 class="font-semibold text-sm uppercase tracking-wide">Income</h4>
-                        <p class="text-2xl font-bold">₱{{ total_income }}</p>
+                <div class="col-md-6">
+                    <div
+                        class="bg-success bg-opacity-10 text-white p-3 rounded d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="text-uppercase fw-bold">Total Income</h5>
+                            <p class="fs-4 fw-bold mb-0">₱{{ "{:,.2f}".format(total_income) }}</p>
+                        </div>
+                        <a href="#"
+                            class="btn btn-success rounded-circle d-flex align-items-center justify-content-center"
+                            style="width: 40px; height: 40px;" data-bs-toggle="modal"
+                            data-bs-target="#incomeModal">+</a>
                     </div>
-                    <a href="/add-income"
-                        class="w-10 h-10 flex items-center justify-center rounded-full bg-green-500 text-white shadow-md hover:bg-green-600 hover:scale-105 transition transform duration-200 ease-in-out focus:ring-2 focus:ring-green-300">
-                        +
-                    </a>
                 </div>
 
                 <!-- Expense Card -->
-                <div class="bg-red-100 p-4 rounded-xl text-red-800 flex items-center justify-between shadow-sm">
-                    <div>
-                        <h4 class="font-semibold text-sm uppercase tracking-wide">Expense</h4>
-                        <p class="text-2xl font-bold">₱{{ total_expenses }}</p>
+                <div class="col-md-6">
+                    <div
+                        class="bg-danger bg-opacity-10 text-white p-3 rounded d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="text-uppercase fw-bold">Total Expense</h5>
+                            <p class="fs-4 fw-bold mb-0">₱{{ "{:,.2f}".format(total_expenses) }}</p>
+                        </div>
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#expenseModal"
+                            class="btn btn-danger rounded-circle d-flex align-items-center justify-content-center"
+                            style="width: 40px; height: 40px;">+</a>
+
                     </div>
-                    <a href="/add-expense"
-                        class="w-10 h-10 flex items-center justify-center rounded-full bg-red-500 text-white shadow-md hover:bg-red-600 hover:scale-105 transition transform duration-200 ease-in-out focus:ring-2 focus:ring-red-300">
-                        +
-                    </a>
                 </div>
             </div>
 
-            <div class="mt-4 space-y-2">
-                <h3 class="text-lg font-semibold mb-4">Transactions</h3>
-                {% for tx in transactions %}
-                <div class="flex items-center bg-gray-100 p-2 rounded">
-                    <!-- Category -->
-                    <span class="flex-1">{{ tx.category_name }}</span>
+            <div class="mt-4 p-4">
+                <hr>
+                <h3 class="fs-6 fw-semibold mb-4">Recent Transactions</h3>
 
-                    <!-- Amount -->
-                    <span
-                        class="{% if tx.type == 'expense' %}text-red-600{% else %}text-blue-600{% endif %} font-medium w-28 text-center">
-                        {% if tx.type == 'expense' %}-{% else %}+{% endif %}₱{{ tx.amount }}
+                {% for tx in transactions %}
+                <div class="d-flex justify-content-between align-items-center bg-light px-3 py-2 rounded mb-2">
+                    <div class="flex-grow-1">
+                        <div class="fw-bold">{{ tx.category_name }}</div>
+                        <div class="text-muted small">
+                            {% if tx.description %}
+                            {% if tx.description|length > 25 %}
+                            {{ tx.description[:25] }}…
+                            {% else %}
+                            {{ tx.description.ljust(25) }}
+                            {% endif %}
+                            {% else %}
+                            —
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <span class="fw-medium text-center mr-5 
+                     {% if tx.type == 'expense' %}text-danger{% else %}text-primary{% endif %}" style="width: 100px;">
+                        {% if tx.type == 'expense' %}-{% else %}+{% endif %}₱{{ "{:,.2f}".format(tx.amount) }}
                     </span>
 
-                    <!-- Date -->
-                    <span class="text-sm text-gray-500 w-40 text-right">
+                    <span class="text-muted small text-end" style="width: 130px;">
                         {{ tx.transaction_date.strftime('%d %b %Y') }}
                         {% if tx.created_at %}
                         , {{ tx.created_at.strftime('%H:%M') }}
@@ -97,19 +112,18 @@
                 </div>
                 {% endfor %}
 
-                <!-- View All Button -->
-                <div class="text-right pt-2">
-                    <a href="/dashboard/transactions"
-                        class="inline-block text-blue-600 hover:underline text-sm font-medium">
-                        View All →
-                    </a>
+                <div class="text-end pt-2">
+                    <a href="/dashboard/transactions" class="text-primary small text-decoration-none">View All →</a>
                 </div>
             </div>
 
         </div>
-
     </main>
 
+    {% include 'partials/modal_add_income.html' %}
+    {% include 'partials/modal_add_expense.html' %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
