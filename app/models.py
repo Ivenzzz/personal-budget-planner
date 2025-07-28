@@ -4,6 +4,7 @@ import bcrypt
 from flask import current_app
 from flask import Flask, jsonify
 
+
 def get_db_connection():
     return mysql.connector.connect(**current_app.config['DB_CONFIG'])
 
@@ -52,6 +53,7 @@ def get_user_transactions(user_id):
     conn.close()
     return data
 
+
 def add_transaction(user_id, category_id, t_type, amount, description, date):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -77,6 +79,7 @@ def get_total_expenses(user_id):
     conn.close()
     return total
 
+
 def get_total_income(user_id):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -89,6 +92,7 @@ def get_total_income(user_id):
     cursor.close()
     conn.close()
     return total
+
 
 def get_remaining_balance(user_id):
     conn = get_db_connection()
@@ -106,6 +110,7 @@ def get_remaining_balance(user_id):
     cursor.close()
     conn.close()
     return balance
+
 
 def get_all_transactions(user_id):
     conn = get_db_connection()
@@ -132,6 +137,30 @@ def get_all_transactions(user_id):
     conn.close()
     return transactions
 
+def get_all_expense_transactions(user_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT 
+            t.id,
+            t.transaction_date,
+            t.amount,
+            t.description,
+            t.category_id,      -- ✅ Added this
+            c.name AS category_name
+        FROM transactions t
+        JOIN categories c ON t.category_id = c.id
+        WHERE t.type = 'expense' AND t.user_id = %s
+        ORDER BY t.transaction_date DESC
+    """, (user_id,))
+
+    results = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return results
+
+
 
 def get_all_income_categories():
     conn = get_db_connection()
@@ -148,6 +177,7 @@ def get_all_income_categories():
     cursor.close()
     conn.close()
     return income_categories
+
 
 def get_all_expense_categories():
     conn = get_db_connection()
@@ -183,7 +213,7 @@ def add_income(user_id, amount, category_id, transaction_date, description):
     conn.close()
 
 
-def get_expense_totals_by_category():
+def get_expense_totals_by_category(user_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
@@ -194,8 +224,51 @@ def get_expense_totals_by_category():
         FROM transactions t
         JOIN categories c ON t.category_id = c.id
         WHERE t.type = 'expense'
+          AND t.user_id = %s
         GROUP BY c.id, c.name
         ORDER BY total_amount DESC
+    """, (user_id,))
+
+    results = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+    return results
+
+def get_income_totals_by_category(user_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT 
+            c.name AS category_name,
+            SUM(t.amount) AS total_amount
+        FROM transactions t
+        JOIN categories c ON t.category_id = c.id
+        WHERE t.type = 'income'
+          AND t.user_id = %s
+        GROUP BY c.id, c.name
+        ORDER BY total_amount DESC
+    """, (user_id,))
+
+    results = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+    return results
+
+def get_daily_expenses():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT 
+            t.transaction_date,
+            SUM(t.amount) AS total_amount
+        FROM transactions t
+        WHERE t.type = 'expense'
+        GROUP BY t.transaction_date
+        ORDER BY t.transaction_date DESC
     """)
 
     results = cursor.fetchall()
@@ -203,6 +276,38 @@ def get_expense_totals_by_category():
     cursor.close()
     conn.close()
     return results
+
+
+def update_expense_transaction(expense_id, user_id, category_id, amount, description, date):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE transactions
+        SET category_id=%s, amount=%s, description=%s, transaction_date=%s
+        WHERE id=%s AND user_id=%s
+    """, (category_id, amount, description, date, expense_id, user_id))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+def delete_expense_transaction(expense_id, user_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        DELETE FROM transactions 
+        WHERE id = %s AND user_id = %s AND type = 'expense'
+    """, (expense_id, user_id))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+
 
 
 

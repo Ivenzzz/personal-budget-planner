@@ -6,124 +6,230 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard | Budget Planner</title>
     <link href="https://cdn.jsdelivr.net/npm/bootswatch@4.5.2/dist/lumen/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body class="container">
+<body>
 
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg bg-white shadow sticky-top">
-        <div class="container">
-            <a class="navbar-brand text-primary fw-bold" href="#">Personal Budget Planner</a>
-            <div class="collapse navbar-collapse justify-content-center">
-                <ul class="navbar-nav gap-3">
-                    <li class="nav-item">
-                        <a class="nav-link active text-primary fw-medium" href="/dashboard/summary">Summary</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" href="/dashboard/expenses">Expenses</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" href="/dashboard/income">Income</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" href="/dashboard/income">Budgets</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" href="/dashboard/income">Categories</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <!-- Sidebar -->
+    <div class="sidebar shadow-sm">
+        <div class="brand">Personal Budget Planner</div>
+        <a class="nav-link {% if request.path == '/dashboard' %}active{% endif %}" href="/dashboard">
+            <i class="bx bx-chart"></i> Summary
+        </a>
+        <a class="nav-link {% if request.path == '/dashboard/expenses' %}active{% endif %}" href="/dashboard/expenses">
+            <i class="bx bx-wallet"></i> Expenses
+        </a>
+        <a class="nav-link {% if request.path == '/dashboard/income' %}active{% endif %}" href="/dashboard/income">
+            <i class="bx bx-dollar"></i> Income
+        </a>
+        <a class="nav-link" href="/dashboard/income"><i class="bx bx-target-lock"></i> Budgets</a>
+        <a class="nav-link" href="/dashboard/income"><i class="bx bx-category"></i> Categories</a>
+    </div>
 
-    <main class="container mt-4">
-        <!-- Balance Card -->
-        <div class="bg-primary text-white p-4 rounded shadow-sm mb-4">
-            <h2 class="fs-4 fw-bold">Balance</h2>
-            <h3 class="fw-semibold">₱{{ "{:,.2f}".format(remaining_balance) }}</h3>
-        </div>
-
-        <!-- Totals Section -->
-        <div class="bg-white p-4 rounded shadow mb-4">
-            <div class="row g-3">
-                <!-- Income Card -->
-                <div class="col-md-6">
+    <!-- Main Content -->
+    <div class="content">
+        <main class="p-3">
+            <div class="row mb-3">
+                <div class="col-12">
                     <div
-                        class="bg-success bg-opacity-10 text-white p-3 rounded d-flex justify-content-between align-items-center">
+                        class="bg-primary text-white p-4 rounded shadow-sm mb-4 d-flex justify-content-between align-items-center">
+                        <!-- Left: Balance Title & Amount -->
                         <div>
-                            <h5 class="text-uppercase fw-bold">Total Income</h5>
-                            <p class="fs-4 fw-bold mb-0">₱{{ "{:,.2f}".format(total_income) }}</p>
+                            <h2 class="fs-4 fw-bold">Balance</h2>
+                            <h3 class="fw-semibold">₱{{ "{:,.2f}".format(remaining_balance) }}</h3>
                         </div>
-                        <a href="#"
-                            class="btn btn-success rounded-circle d-flex align-items-center justify-content-center"
-                            style="width: 40px; height: 40px;" data-bs-toggle="modal"
-                            data-bs-target="#incomeModal">+</a>
+
+                        <!-- Right: Plus Buttons -->
+                        <div class="d-flex gap-4">
+                            <a href="#" class="btn btn-success mr-2 d-flex align-items-center gap-2"
+                                data-bs-toggle="modal" data-bs-target="#incomeModal">
+                                <i class="bx bx-plus-circle"></i> Add Income
+                            </a>
+                            <a href="#" class="btn btn-danger me-2 d-flex align-items-center gap-2"
+                                data-bs-toggle="modal" data-bs-target="#expenseModal">
+                                <i class="bx bx-minus-circle"></i> Add Expense
+                            </a>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Expense Card -->
+            <!-- Income & Expense Charts -->
+            <div class="row shadow p-3 mb-4">
+                <div class="col-md-6 border-right">
+                    <div class="bg-success bg-opacity-10 text-white p-3 rounded d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-uppercase fw-bold mb-1">
+                                <i class="bx bx-money-withdraw me-2"></i> Total Income
+                            </h6>
+                            <h4 class="fs-4 fw-bold mb-0">₱{{ "{:,.2f}".format(total_income) }}</h4>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded mb-4" style="height: 240px;">
+                        <canvas id="incomeChart" style="height: 240px;"></canvas>
+                    </div>
+                </div>
                 <div class="col-md-6">
-                    <div
-                        class="bg-danger bg-opacity-10 text-white p-3 rounded d-flex justify-content-between align-items-center">
+                    <div class="bg-danger bg-opacity-10 text-white p-3 rounded d-flex justify-content-between align-items-center">
                         <div>
-                            <h5 class="text-uppercase fw-bold">Total Expense</h5>
-                            <p class="fs-4 fw-bold mb-0">₱{{ "{:,.2f}".format(total_expenses) }}</p>
+                            <h6 class="text-uppercase fw-bold mb-1">
+                                <i class="bx bx-cart me-2"></i> Total Expense
+                            </h6>
+                            <h4 class="fs-4 fw-bold mb-0">₱{{ "{:,.2f}".format(total_expenses) }}</h4>
                         </div>
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#expenseModal"
-                            class="btn btn-danger rounded-circle d-flex align-items-center justify-content-center"
-                            style="width: 40px; height: 40px;">+</a>
-
+                    </div>
+                    <div class="bg-white p-4 rounded mb-4" style="height: 240px;">
+                        <canvas id="expenseChart" style="height: 240px;"></canvas>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-4 p-4">
-                <hr>
-                <h3 class="fs-6 fw-semibold mb-4">Recent Transactions</h3>
+            <!-- Transactions Overview Section -->
+            <div class="bg-white p-4 rounded shadow mb-4">
+                <div class="p-4">
+                    <h3 class="fs-6 fw-semibold mb-4">
+                        <i class="bx bx-list-ul me-2"></i> Recent Transactions
+                    </h3>
 
-                {% for tx in transactions %}
-                <div class="d-flex justify-content-between align-items-center bg-light px-3 py-2 rounded mb-2">
-                    <div class="flex-grow-1">
-                        <div class="fw-bold">{{ tx.category_name }}</div>
-                        <div class="text-muted small">
-                            {% if tx.description %}
-                            {% if tx.description|length > 25 %}
-                            {{ tx.description[:25] }}…
-                            {% else %}
-                            {{ tx.description.ljust(25) }}
-                            {% endif %}
-                            {% else %}
-                            —
-                            {% endif %}
+                    {% for tx in transactions %}
+                    <div class="d-flex justify-content-between align-items-center bg-light px-3 py-2 rounded mb-2">
+                        <div class="flex-grow-2">
+                            <div class="fw-bold">
+                                <i class="bx bx-category-alt me-1"></i> {{ tx.category_name }}
+                            </div>
+                            <div class="text-muted small">
+                                {% if tx.description %}
+                                {% if tx.description|length > 25 %}
+                                {{ tx.description[:25] }}…
+                                {% else %}
+                                {{ tx.description.ljust(25) }}
+                                {% endif %}
+                                {% else %}
+                                —
+                                {% endif %}
+                            </div>
                         </div>
+
+                        <span class="fw-medium text-left 
+                        {% if tx.type == 'expense' %}text-danger{% else %}text-primary{% endif %}">
+                            <i
+                                class="bx {% if tx.type == 'expense' %}bx-minus-circle{% else %}bx-plus-circle{% endif %} me-1"></i>
+                            {% if tx.type == 'expense' %}{% else %}{% endif %}₱{{ "{:,.2f}".format(tx.amount) }}
+                        </span>
+
+                        <span class="text-muted small text-end">
+                            <i class="bx bx-calendar me-1"></i> {{ tx.transaction_date.strftime('%d %b %Y') }}
+                            {% if tx.created_at %}
+                            , <i class="bx bx-time-five me-1"></i>{{ tx.created_at.strftime('%H:%M') }}
+                            {% endif %}
+                        </span>
                     </div>
+                    {% endfor %}
 
-                    <span class="fw-medium text-center mr-5 
-                     {% if tx.type == 'expense' %}text-danger{% else %}text-primary{% endif %}" style="width: 100px;">
-                        {% if tx.type == 'expense' %}-{% else %}+{% endif %}₱{{ "{:,.2f}".format(tx.amount) }}
-                    </span>
-
-                    <span class="text-muted small text-end" style="width: 130px;">
-                        {{ tx.transaction_date.strftime('%d %b %Y') }}
-                        {% if tx.created_at %}
-                        , {{ tx.created_at.strftime('%H:%M') }}
-                        {% endif %}
-                    </span>
-                </div>
-                {% endfor %}
-
-                <div class="text-end pt-2">
-                    <a href="/dashboard/transactions" class="text-primary small text-decoration-none">View All →</a>
+                    <div class="text-end pt-2">
+                        <a href="/dashboard/transactions" class="text-primary small text-decoration-none">
+                            View All <i class="bx bx-right-arrow-alt"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
-
-        </div>
-    </main>
+        </main>
+    </div>
 
     {% include 'partials/modal_add_income.html' %}
     {% include 'partials/modal_add_expense.html' %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // Income Chart
+            fetch("/api/income-totals")
+                .then(response => response.json())
+                .then(data => {
+                    const labels = data.map(item => item.category_name);
+                    const amounts = data.map(item => item.total_amount);
+
+                    const ctx = document.getElementById("incomeChart").getContext("2d");
+                    new Chart(ctx, {
+                        type: "doughnut",
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: amounts,
+                                backgroundColor: [
+                                    "#3B82F6", "#10B981", "#F59E0B", "#EF4444",
+                                    "#8B5CF6", "#EC4899", "#14B8A6", "#6366F1",
+                                    "#84CC16", "#F97316"
+                                ],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: "70%",
+                            plugins: {
+                                legend: { position: "bottom", labels: { color: "#374151" } },
+                                tooltip: {
+                                    callbacks: {
+                                        label: context => `${context.label}: ₱${parseFloat(context.raw).toLocaleString()}`
+                                    }
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => console.error("Error loading income chart:", error));
+
+            // Expense Chart
+            fetch("/api/expense-totals")
+                .then(response => response.json())
+                .then(data => {
+                    const labels = data.map(item => item.category_name);
+                    const amounts = data.map(item => item.total_amount);
+
+                    const ctx = document.getElementById("expenseChart").getContext("2d");
+                    new Chart(ctx, {
+                        type: "doughnut",
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: amounts,
+                                backgroundColor: [
+                                    "#F87171", "#FB923C", "#FBBF24", "#A78BFA",
+                                    "#60A5FA", "#34D399", "#F472B6", "#4ADE80",
+                                    "#38BDF8", "#E879F9"
+                                ],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: "70%",
+                            plugins: {
+                                legend: { position: "bottom", labels: { color: "#374151" } },
+                                tooltip: {
+                                    callbacks: {
+                                        label: context => `${context.label}: ₱${parseFloat(context.raw).toLocaleString()}`
+                                    }
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => console.error("Error loading expense chart:", error));
+        });
+    </script>
 </body>
 
 </html>
