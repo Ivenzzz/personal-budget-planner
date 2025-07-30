@@ -399,6 +399,25 @@ def delete_budget_entry(budget_id):
     save_json('budgets.json', budgets)
 
 
+def add_expense_category(name, color, category_type):
+    categories = load_json('categories.json')
+
+    # Generate a new ID (incremental)
+    new_id = max([c['id'] for c in categories], default=0) + 1
+
+    # Create new category record
+    new_category = {
+        "id": new_id,
+        "name": name,
+        "color": color,
+        "type": category_type  # e.g., "expense"
+    }
+
+    categories.append(new_category)
+    save_json('categories.json', categories)
+
+
+
 
 
 

@@ -159,6 +159,24 @@ def expenses():
                            expenses=expenses_transactions, 
                            categories=expense_categories)
 
+@main.route('/categories/add', methods=['POST'])
+def add_expense_category():
+    if 'user_id' not in session:
+        return redirect(url_for('main.login'))
+
+    name = request.form['name']
+    color = request.form['color']
+    category_type = 'expense'  # should be "expense"
+
+    try:
+        models.add_expense_category(name, color, category_type)
+        flash('Expense category added successfully!', 'success')
+    except Exception as e:
+        flash(f'Error adding category: {e}', 'danger')
+
+    return redirect(url_for('main.expenses'))
+
+
 
 @main.route('/dashboard/income')
 def income():
@@ -195,10 +213,6 @@ def budgets():
         budgets_by_month=all_monthly_budgets,
         expense_categories=models.get_all_expense_categories(),
     )
-
-
-
-
 
 @main.route('/dashboard/expenses/update', methods=['POST'])
 def update_expense():
