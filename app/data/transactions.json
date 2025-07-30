@@ -143,5 +143,23 @@
         "amount": 100000.0,
         "description": "Scatter Win",
         "transaction_date": "2025-07-30 09:47:00"
+    },
+    {
+        "id": 16,
+        "user_id": 1,
+        "category_id": "1",
+        "type": "income",
+        "amount": 20.0,
+        "description": "test",
+        "transaction_date": "2025-07-31 14:37:29"
+    },
+    {
+        "id": 17,
+        "user_id": 1,
+        "category_id": "12",
+        "type": "expense",
+        "amount": 399.0,
+        "description": "test",
+        "transaction_date": "2025-07-31 14:38:15"
     }
 ]

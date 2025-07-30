@@ -1,9 +1,62 @@
 [
-  { "id": 1, "user_id": 1, "category_id": 6, "budget_amount": 600.00, "consumed": 250.00, "month": 7, "year": 2025, "created_at": "2025-07-24 02:09:07" },
-  { "id": 2, "user_id": 1, "category_id": 7, "budget_amount": 900.00, "consumed": 500.00, "month": 7, "year": 2025, "created_at": "2025-07-24 02:09:07" },
-  { "id": 3, "user_id": 1, "category_id": 12, "budget_amount": 100.00, "consumed": 50.00, "month": 7, "year": 2025, "created_at": "2025-07-24 02:09:07" },
-  { "id": 4, "user_id": 1, "category_id": 13, "budget_amount": 40.00, "consumed": 20.00, "month": 7, "year": 2025, "created_at": "2025-07-24 02:09:07" },
-  { "id": 5, "user_id": 1, "category_id": 14, "budget_amount": 70.00, "consumed": 60.00, "month": 7, "year": 2025, "created_at": "2025-07-24 02:09:07" },
-  { "id": 6, "user_id": 1, "category_id": 14, "budget_amount": 100.00, "consumed": 0.00, "month": 8, "year": 2025, "created_at": "2025-08-24 02:09:07" },
-  { "id": 7, "user_id": 1, "category_id": 14, "budget_amount": 500.00, "consumed": 0.00, "month": 8, "year": 2025, "created_at": "2025-08-24 02:09:07" }
+    {
+        "id": 1,
+        "user_id": 1,
+        "category_id": 6,
+        "budget_amount": 500.0,
+        "consumed": 250.0,
+        "month": 7,
+        "year": 2025,
+        "created_at": "2025-07-24 02:09:07"
+    },
+    {
+        "id": 2,
+        "user_id": 1,
+        "category_id": 7,
+        "budget_amount": 900.0,
+        "consumed": 500.0,
+        "month": 7,
+        "year": 2025,
+        "created_at": "2025-07-24 02:09:07"
+    },
+    {
+        "id": 3,
+        "user_id": 1,
+        "category_id": 12,
+        "budget_amount": 100.0,
+        "consumed": 50.0,
+        "month": 7,
+        "year": 2025,
+        "created_at": "2025-07-24 02:09:07"
+    },
+    {
+        "id": 4,
+        "user_id": 1,
+        "category_id": 13,
+        "budget_amount": 40.0,
+        "consumed": 20.0,
+        "month": 7,
+        "year": 2025,
+        "created_at": "2025-07-24 02:09:07"
+    },
+    {
+        "id": 5,
+        "user_id": 1,
+        "category_id": 14,
+        "budget_amount": 70.0,
+        "consumed": 60.0,
+        "month": 7,
+        "year": 2025,
+        "created_at": "2025-07-24 02:09:07"
+    },
+    {
+        "id": 7,
+        "user_id": 1,
+        "category_id": 14,
+        "budget_amount": 500.0,
+        "consumed": 0.0,
+        "month": 8,
+        "year": 2025,
+        "created_at": "2025-08-24 02:09:07"
+    }
 ]

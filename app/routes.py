@@ -187,10 +187,15 @@ def budgets():
     # ✅ Fetch all monthly budget data
     all_monthly_budgets = models.get_all_monthly_budgets_by_category(user_id)
 
+    # ✅ Sort by year and month (latest first)
+    all_monthly_budgets.sort(key=lambda b: (b['year'], b['month']), reverse=False)
+
     return render_template(
         'budget.html',
-        budgets_by_month=all_monthly_budgets
+        budgets_by_month=all_monthly_budgets,
+        expense_categories=models.get_all_expense_categories(),
     )
+
 
 
 
@@ -246,7 +251,64 @@ def update_income():
     return redirect(url_for('main.income'))
 
 
+@main.route('/budgets/add', methods=['POST'])
+def add_budget():
+    if 'user_id' not in session:
+        return redirect(url_for('main.login'))
 
+    user_id = session['user_id']
+    category_id = request.form['category_id']
+    budget_amount = request.form['budget_amount']
+    month_year = request.form['month_year']  # format: YYYY-MM
+
+    # Extract month and year
+    year, month = map(int, month_year.split('-'))
+
+    try:
+        models.add_budget_entry(user_id, category_id, budget_amount, month, year)
+        flash('Budget added successfully!', 'success')
+    except Exception as e:
+        flash(f'Error adding budget: {e}', 'danger')
+
+    return redirect(url_for('main.budgets'))
+
+
+@main.route('/budgets/update', methods=['POST'])
+def update_budget():
+    if 'user_id' not in session:
+        return redirect(url_for('main.login'))
+
+    budget_id = int(request.form['id'])
+    category_id = int(request.form['category_id'])
+    budget_amount = float(request.form['budget_amount'])
+    consumed = float(request.form['consumed'])
+    month_year = request.form['month_year']
+    year, month = map(int, month_year.split('-'))
+
+    try:
+        models.update_budget_entry(budget_id, category_id, budget_amount, consumed, month, year)
+        flash('Budget updated successfully!', 'success')
+    except Exception as e:
+        flash(str(e), 'danger')  # ✅ Show validation error in flash message
+
+    return redirect(url_for('main.budgets'))
+
+
+
+@main.route('/budgets/delete', methods=['POST'])
+def delete_budget():
+    if 'user_id' not in session:
+        return redirect(url_for('main.login'))
+
+    budget_id = int(request.form['id'])
+
+    try:
+        models.delete_budget_entry(budget_id)
+        flash('Budget deleted successfully!', 'success')
+    except Exception as e:
+        flash(f'Error deleting budget: {e}', 'danger')
+
+    return redirect(url_for('main.budgets'))
 
 
 

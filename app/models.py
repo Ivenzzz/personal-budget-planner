@@ -327,11 +327,80 @@ def get_all_monthly_budgets_by_category(user_id):
                     }
 
                 grouped_results[key]["budgets"].append({
+                    "id": b["id"],
+                    "category_id": b["category_id"],
                     "category_name": category['name'],
                     "budget_amount": b['budget_amount'],
-                    "consumed": b.get('consumed', 0.00),  # ✅ Add consumed
+                    "consumed": b.get('consumed', 0.00),
+                    "month": b["month"],           # ✅ Added
+                    "year": b["year"],             # ✅ Added
                     "color": category.get('color', "#9CA3AF")
                 })
 
     results = sorted(grouped_results.values(), key=lambda x: (x["year"], x["month"]), reverse=True)
     return results
+
+
+
+def add_budget_entry(user_id, category_id, budget_amount, month, year):
+    budgets = load_json('budgets.json')
+
+    # Generate a new ID (incremental based on max ID)
+    new_id = max([b['id'] for b in budgets], default=0) + 1
+
+    # Create new budget record
+    new_budget = {
+        "id": new_id,
+        "user_id": int(user_id),
+        "category_id": int(category_id),
+        "budget_amount": float(budget_amount),
+        "consumed": 0.0,  # Default consumed amount
+        "month": month,
+        "year": year,
+        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+
+    budgets.append(new_budget)
+    save_json('budgets.json', budgets)
+
+
+def update_budget_entry(budget_id, category_id, budget_amount, consumed, month, year):
+    budgets = load_json('budgets.json')
+    budget = next((b for b in budgets if b['id'] == budget_id), None)
+    if not budget:
+        raise ValueError(f"Budget with ID {budget_id} not found.")
+
+    # ✅ Validation: Budget amount cannot be less than consumed
+    if float(budget_amount) < float(budget['consumed']):
+        raise ValueError("Budget amount cannot be less than the consumed amount.")
+
+    # Update fields if valid
+    budget['category_id'] = int(category_id)
+    budget['budget_amount'] = float(budget_amount)
+    budget['consumed'] = float(consumed)  # Read-only but persisted
+    budget['month'] = int(month)
+    budget['year'] = int(year)
+
+    save_json('budgets.json', budgets)
+
+
+
+def delete_budget_entry(budget_id):
+    budgets = load_json('budgets.json')
+
+    # Check if budget exists
+    budget = next((b for b in budgets if b['id'] == budget_id), None)
+    if not budget:
+        raise ValueError(f"Budget with ID {budget_id} not found.")
+
+    # Remove the budget
+    budgets = [b for b in budgets if b['id'] != budget_id]
+
+    save_json('budgets.json', budgets)
+
+
+
+
+
+
+

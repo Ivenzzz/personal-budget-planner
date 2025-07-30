@@ -1,24 +1,31 @@
 <!-- _sidebar.html -->
 <div class="sidebar shadow-sm">
     <h2 class="brand fs-5 mb-5 text-dark">Personal Budget Planner</h2>
+    <a class="nav-link bg-primary text-light {% if request.path == '/dashboard/profile' %}active{% endif %}" href="/profile">
+        <i class="bx bx-user-circle"></i>Profile
+    </a>
     <a class="nav-link {% if request.path == '/dashboard' %}active{% endif %}" href="/dashboard">
         <i class="bx bx-chart"></i> Summary
     </a>
-    <a class="nav-link {% if request.path.startswith('/dashboard/expenses') %}active{% endif %}" href="/dashboard/expenses">
+    <a class="nav-link {% if request.path.startswith('/dashboard/expenses') %}active{% endif %}"
+        href="/dashboard/expenses">
         <i class="bx bx-wallet"></i> Expenses
     </a>
     <a class="nav-link {% if request.path.startswith('/dashboard/income') %}active{% endif %}" href="/dashboard/income">
         <i class="bx bx-dollar"></i> Income
     </a>
-    <a class="nav-link {% if request.path.startswith('/dashboard/budgets') %}active{% endif %}" href="/dashboard/budgets">
+    <a class="nav-link {% if request.path.startswith('/dashboard/budgets') %}active{% endif %}"
+        href="/dashboard/budgets">
         <i class="bx bx-target-lock"></i> Budgets
     </a>
-    <a class="nav-link {% if request.path.startswith('/dashboard/categories') %}active{% endif %}" href="/dashboard/categories">
+    <a class="nav-link {% if request.path.startswith('/dashboard/categories') %}active{% endif %}"
+        href="/dashboard/categories">
         <i class="bx bx-category"></i> Categories
     </a>
 
     <!-- 🚪 Logout Button -->
-    <a class="nav-link text-white bg-danger mt-3" href="{{ url_for('main.logout') }}">
+    <a id="logoutButton" class="nav-link text-white bg-danger mt-3" href="#">
         <i class="bx bx-log-out"></i> Logout
     </a>
+
 </div>
