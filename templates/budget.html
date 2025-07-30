@@ -1,0 +1,166 @@
+{% extends "partials/base.html" %}
+
+{% block title %}Budgets{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-4">
+        <h4 id="budgetMonthYear" class="fw-semibold text-center mb-3 shadow p-3"></h4>
+        <div class="bg-white shadow p-4 rounded">
+            <canvas id="budgetChart"></canvas>
+        </div>
+        <div id="summaryCard" class="bg-white shadow p-3 rounded text-center"></div>
+    </div>
+
+    <div class="col-8">
+        <!-- ✅ Month Selector -->
+        <div class="d-flex justify-content-end mb-3">
+            <label for="monthPicker" class="form-label fw-semibold me-2 mt-2">Select Month:</label>
+            <input type="month" id="monthPicker" class="form-control w-auto">
+        </div>
+
+        <!-- ✅ Budget Tables -->
+        <div id="budgetTables">
+            {% for month_data in budgets_by_month %}
+            <div class="budget-table" data-year="{{ month_data.year }}" data-month="{{ month_data.month }}">
+                <h5 class="fw-bold">
+                    {{ month_data.month_name }} {{ month_data.year }}
+                </h5>
+                <table class="table table-bordered align-middle shadow-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Category</th>
+                            <th>Budget Amount (₱)</th>
+                            <th>Consumed (₱)</th>
+                            <th>Remaining (₱)</th>
+                            <th>Color</th>
+                            <th>Actions</th> <!-- ✅ Added Actions column -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for budget in month_data.budgets %}
+                        <tr>
+                            <td>{{ budget.category_name }}</td>
+                            <td>₱{{ "{:,.2f}".format(budget.budget_amount) }}</td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    {% set percent = (budget.consumed / budget.budget_amount * 100) if
+                                    budget.budget_amount > 0 else 0 %}
+                                    <div class="progress-bar" role="progressbar"
+                                        style="width: {{ percent }}%; background-color: {{ budget.color }};">
+                                        ₱{{ "{:,.2f}".format(budget.consumed) }}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>₱{{ "{:,.2f}".format(budget.budget_amount - budget.consumed) }}</td>
+                            <td>
+                                <span class="badge rounded-pill" style="background-color: {{ budget.color }};">
+                                    &nbsp;&nbsp;&nbsp;
+                                </span>
+                            </td>
+                            <!-- ✅ Action Buttons with Boxicons -->
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-primary me-1 edit-budget" data-id="{{ budget.id }}"
+                                    data-category="{{ budget.category_name }}" data-amount="{{ budget.budget_amount }}"
+                                    data-consumed="{{ budget.consumed }}">
+                                    <i class='bx bx-edit'></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger delete-budget" data-id="{{ budget.id }}">
+                                    <i class='bx bx-trash'></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // ✅ Handle Budget Chart
+        fetch("/api/current-monthly-budgets")
+            .then(response => response.json())
+            .then(data => {
+                const titleEl = document.getElementById("budgetMonthYear");
+                if (titleEl) {
+                    const monthYearText = `${new Date(data.year, data.month - 1)
+                        .toLocaleString('default', { month: 'long' })} ${data.year}`;
+                    titleEl.textContent = `Budget for ${monthYearText}`;
+                }
+
+                // ✅ Update Summary Card
+                const summaryCard = document.getElementById("summaryCard");
+                if (summaryCard) {
+                    summaryCard.innerHTML = `
+                <p class="mb-1"><strong>Total Budget:</strong> ₱${data.total_budget.toLocaleString()}</p>
+                <p class="mb-1 text-primary"><strong>Consumed:</strong> ₱${data.total_consumed.toLocaleString()}</p>
+                <p class="mb-0 text-success"><strong>Remaining:</strong> ₱${data.remaining.toLocaleString()}</p>
+            `;
+                }
+
+                // ✅ Render Chart
+                const labels = data.budgets.map(item => item.category_name);
+                const amounts = data.budgets.map(item => item.budget_amount);
+                const backgroundColors = data.budgets.map(item => item.color || "#9CA3AF");
+
+                const ctx = document.getElementById("budgetChart").getContext("2d");
+                new Chart(ctx, {
+                    type: "pie",
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: amounts,
+                            backgroundColor: backgroundColors,
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: "bottom" },
+                            tooltip: {
+                                callbacks: {
+                                    label: context => `${context.label}: ₱${parseFloat(context.raw).toLocaleString()}`
+                                }
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error("Error loading budget chart:", error));
+
+
+        // ✅ Handle Month Picker for Tables
+        const monthPicker = document.getElementById("monthPicker");
+        const tables = document.querySelectorAll(".budget-table");
+
+        function filterTables() {
+            const selectedValue = monthPicker.value; // Format: "YYYY-MM"
+            tables.forEach(table => {
+                const year = table.getAttribute("data-year");
+                const month = String(table.getAttribute("data-month")).padStart(2, "0");
+                if (selectedValue === "" || selectedValue === `${year}-${month}`) {
+                    table.style.display = "block";
+                } else {
+                    table.style.display = "none";
+                }
+            });
+        }
+
+        // Default: Show all tables
+        filterTables();
+
+        // Filter on change
+        monthPicker.addEventListener("change", filterTables);
+    });
+</script>
+{% endblock %}

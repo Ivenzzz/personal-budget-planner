@@ -17,13 +17,6 @@ body {
     padding: 20px;
 }
 
-.sidebar .brand {
-    font-size: 1.25rem;
-    font-weight: bold;
-    color: #007bff;
-    margin-bottom: 2rem;
-}
-
 .sidebar .nav-link {
     font-weight: 500;
     color: #333;

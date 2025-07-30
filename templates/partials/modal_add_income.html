@@ -12,7 +12,7 @@
                     <!-- Category -->
                     <div class="mb-3">
                         <label for="category" class="form-label">Category</label>
-                        <select id="category" name="category_id" class="form-control" required>
+                        <select id="category" name="category_id" class="form-select" required>
                             {% for cat in income_categories %}
                                 <option value="{{ cat.id }}">{{ cat.name }}</option>
                             {% endfor %}

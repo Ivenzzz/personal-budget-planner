@@ -1,0 +1,7 @@
+[
+  { "id": 1, "username": "alice", "password": "$2a$12$0RBhu8IWwpwzjGOH89qQ1epYUoVoFKyLyjjCFfePC2nQ0UiBJPm1O", "type": "user", "created_at": "2025-07-24 01:57:04" },
+  { "id": 2, "username": "bob", "password": "$2a$12$0RBhu8IWwpwzjGOH89qQ1epYUoVoFKyLyjjCFfePC2nQ0UiBJPm1O", "type": "user", "created_at": "2025-07-24 01:57:04" },
+  { "id": 3, "username": "charlie", "password": "$2a$12$0RBhu8IWwpwzjGOH89qQ1epYUoVoFKyLyjjCFfePC2nQ0UiBJPm1O", "type": "user", "created_at": "2025-07-24 01:57:04" },
+  { "id": 4, "username": "diana", "password": "$2a$12$0RBhu8IWwpwzjGOH89qQ1epYUoVoFKyLyjjCFfePC2nQ0UiBJPm1O", "type": "user", "created_at": "2025-07-24 01:57:04" },
+  { "id": 5, "username": "edward", "password": "$2a$12$0RBhu8IWwpwzjGOH89qQ1epYUoVoFKyLyjjCFfePC2nQ0UiBJPm1O", "type": "user", "created_at": "2025-07-24 01:57:04" }
+]

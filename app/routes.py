@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, session, url_for, flash
 from app import models
 from datetime import date
+from datetime import datetime
 from flask import jsonify
 import json
 
@@ -33,23 +34,30 @@ def dashboard():
     remaining_balance = models.get_remaining_balance(user_id)
     transactions = models.get_all_transactions(user_id)
 
-    income_categories = models.get_all_income_categories()
-    expense_categories = models.get_all_expense_categories()
+    # Convert string dates to datetime objects
+    for tx in transactions:
+        if isinstance(tx.get('transaction_date'), str):
+            tx['transaction_date'] = datetime.strptime(tx['transaction_date'], "%Y-%m-%d")
+        if tx.get('created_at') and isinstance(tx['created_at'], str):
+            # Assuming created_at is ISO format like '2025-07-24 02:07:17'
+            tx['created_at'] = datetime.strptime(tx['created_at'], "%Y-%m-%d %H:%M:%S")
 
     expense_totals_by_category = models.get_expense_totals_by_category(user_id)
     expense_totals_json = json.dumps(expense_totals_by_category, default=float)
 
     current_date = date.today().isoformat()
 
-    return render_template('dashboard.html',
-                           total_income=total_income,
-                           total_expenses=total_expenses,
-                           remaining_balance=remaining_balance,
-                           transactions=transactions,
-                           income_categories=income_categories,
-                           expense_categories=expense_categories, 
-                           expense_totals_json=expense_totals_json,
-                           current_date=current_date)
+    return render_template(
+        'dashboard.html',
+        total_income=total_income,
+        total_expenses=total_expenses,
+        remaining_balance=remaining_balance,
+        transactions=transactions,
+        income_categories=models.get_all_income_categories(),
+        expense_categories=models.get_all_expense_categories(),
+        expense_totals_json=expense_totals_json,
+        current_date=current_date
+    )
 
 
 @main.route('/add-income', methods=['POST'])
@@ -119,7 +127,18 @@ def monthly_expenses():
         return jsonify(data), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
 
+@main.route('/api/current-monthly-budgets', methods=['GET'])
+def monthly_budgets():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    try:
+        user_id = session['user_id']
+        data = models.get_current_monthly_budget_by_category(user_id)
+        return jsonify(data), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 
@@ -139,6 +158,41 @@ def expenses():
     return render_template('expenses.html', 
                            expenses=expenses_transactions, 
                            categories=expense_categories)
+
+
+@main.route('/dashboard/income')
+def income():
+    if 'user_id' not in session:
+        return redirect(url_for('main.login'))
+
+    user_id = session['user_id']
+
+    # Fetch all income transactions for this user
+    income_transactions = models.get_all_income_transactions(user_id)
+
+    # Fetch all income categories for this user
+    income_categories = models.get_all_income_categories()
+
+    return render_template('income.html', 
+                           incomes=income_transactions, 
+                           categories=income_categories)
+
+@main.route('/dashboard/budgets')
+def budgets():
+    if 'user_id' not in session:
+        return redirect(url_for('main.login'))
+
+    user_id = session['user_id']
+
+    # ✅ Fetch all monthly budget data
+    all_monthly_budgets = models.get_all_monthly_budgets_by_category(user_id)
+
+    return render_template(
+        'budget.html',
+        budgets_by_month=all_monthly_budgets
+    )
+
+
 
 
 @main.route('/dashboard/expenses/update', methods=['POST'])
@@ -174,6 +228,44 @@ def delete_expense(expense_id):
     return redirect(url_for('main.expenses'))
 
 
+@main.route('/income/update', methods=['POST'])
+def update_income():
+    if 'user_id' not in session:
+        return redirect(url_for('main.login'))
+
+    income_id = request.form.get('id')
+    category_id = request.form.get('category_id')
+    amount = request.form.get('amount')
+    description = request.form.get('description')
+    transaction_date = request.form.get('transaction_date')
+
+    # Use the model function for updating
+    models.update_income_transaction(income_id, session['user_id'], category_id, amount, description, transaction_date)
+
+    flash("Income transaction updated successfully!", "success")
+    return redirect(url_for('main.income'))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@main.route('/logout')
+def logout():
+    session.clear()  # Clear session data
+    flash('You have been logged out successfully.', 'info')
+    return redirect(url_for('main.login'))
 
 
 
