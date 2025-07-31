@@ -239,7 +239,7 @@ def budgets():
     all_monthly_budgets = models.get_all_monthly_budgets_by_category(user_id)
 
     # ✅ Sort by year and month (latest first)
-    all_monthly_budgets.sort(key=lambda b: (b['year'], b['month']), reverse=False)
+    all_monthly_budgets.sort(key=lambda b: (b['year'], b['month']), reverse=True)
 
     return render_template(
         'budget.html',

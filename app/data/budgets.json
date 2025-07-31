@@ -48,15 +48,5 @@
         "month": 7,
         "year": 2025,
         "created_at": "2025-07-24 02:09:07"
-    },
-    {
-        "id": 7,
-        "user_id": 1,
-        "category_id": 14,
-        "budget_amount": 500.0,
-        "consumed": 0.0,
-        "month": 8,
-        "year": 2025,
-        "created_at": "2025-08-24 02:09:07"
     }
 ]
