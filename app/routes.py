@@ -15,12 +15,20 @@ def index():
 @main.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        user = models.get_user_by_username(request.form['username'])
-        if user and models.verify_password(user['password'], request.form['password']):
+        username = request.form['username']
+        password = request.form['password']
+
+        user = models.get_user_by_username(username)
+
+        if user and models.verify_password(user['password'], password):
             session['user_id'] = user['id']
+            flash("Login successful!", "success")  # ✅ Success flash message
             return redirect(url_for('main.dashboard'))
-        flash("Invalid credentials")
+        else:
+            flash("Invalid username or password", "danger")  # ✅ Error flash message
+
     return render_template('login.html')
+
 
 
 @main.route('/dashboard')
@@ -88,9 +96,16 @@ def add_expense():
     description = request.form.get('description', '')
     transaction_date = request.form['transaction_date']
 
-    models.add_transaction(user_id, category_id, 'expense', amount, description, transaction_date)
-    flash("Expense added successfully!")
+    try:
+        models.add_transaction(user_id, category_id, 'expense', amount, description, transaction_date)
+        flash("Expense added successfully!", "success")
+    except ValueError as e:  # Budget errors or validation errors
+        flash(str(e), "danger")
+    except Exception as e:  # Any unexpected errors
+        flash(f"An unexpected error occurred: {e}", "danger")
+
     return redirect(url_for('main.dashboard'))
+
 
 
 @main.route('/api/expense-totals', methods=['GET'])
@@ -164,18 +179,36 @@ def add_expense_category():
     if 'user_id' not in session:
         return redirect(url_for('main.login'))
 
+    user_id = session['user_id']  # ✅ Include logged-in user's ID
     name = request.form['name']
     color = request.form['color']
-    category_type = 'expense'  # should be "expense"
+    category_type = request.form['type'] 
 
     try:
-        models.add_expense_category(name, color, category_type)
+        models.add_expense_category(user_id, name, color, category_type)  # ✅ Pass user_id
         flash('Expense category added successfully!', 'success')
     except Exception as e:
         flash(f'Error adding category: {e}', 'danger')
 
     return redirect(url_for('main.expenses'))
 
+@main.route('/categories-income/add', methods=['POST'])
+def add_income_category():
+    if 'user_id' not in session:
+        return redirect(url_for('main.login'))
+
+    user_id = session['user_id']  # ✅ Include logged-in user's ID
+    name = request.form['name']
+    color = request.form['color']
+    category_type = request.form['type'] 
+
+    try:
+        models.add_expense_category(user_id, name, color, category_type)  # ✅ Pass user_id
+        flash('Expense category added successfully!', 'success')
+    except Exception as e:
+        flash(f'Error adding category: {e}', 'danger')
+
+    return redirect(url_for('main.income'))
 
 
 @main.route('/dashboard/income')
@@ -325,9 +358,73 @@ def delete_budget():
     return redirect(url_for('main.budgets'))
 
 
+@main.route('/categories/delete/<int:category_id>', methods=['POST'])
+def delete_category(category_id):
+    if 'user_id' not in session:
+        return redirect(url_for('main.login'))
+
+    user_id = session['user_id']
+
+    try:
+        models.delete_category(category_id, user_id)
+        flash('Category deleted successfully!', 'success')
+    except Exception as e:
+        flash(f'Error deleting category: {e}', 'danger')
+
+    return redirect(url_for('main.expenses'))
+
+@main.route('/categories-income/delete/<int:category_id>', methods=['POST'])
+def delete_income_category(category_id):
+    if 'user_id' not in session:
+        return redirect(url_for('main.login'))
+
+    user_id = session['user_id']
+
+    try:
+        models.delete_category(category_id, user_id)
+        flash('Category deleted successfully!', 'success')
+    except Exception as e:
+        flash(f'Error deleting category: {e}', 'danger')
+
+    return redirect(url_for('main.income'))
 
 
+@main.route('/income/delete/<int:income_id>', methods=['POST'])
+def delete_income(income_id):
+    if 'user_id' not in session:
+        return redirect(url_for('main.login'))
 
+    try:
+        models.delete_income_transaction(income_id, session['user_id'])
+        flash('Income deleted successfully!', 'success')
+    except Exception as e:
+        flash(f'Error deleting income: {e}', 'danger')
+
+    return redirect(url_for('main.income'))
+
+
+@main.route('/register-user', methods=['POST'])
+def register_user():
+    try:
+        data = request.get_json()
+        username = data.get('username', '').strip()
+        password = data.get('password', '').strip()
+
+        if not username or not password:
+            return jsonify({"success": False, "message": "Username and password are required."}), 400
+
+        # ✅ Call the model function
+        models.register_user_model(username, password)
+
+        return jsonify({"success": True, "message": "User registered successfully!"}), 201
+
+    except ValueError as ve:
+        # Handle known validation errors (like duplicate username)
+        return jsonify({"success": False, "message": str(ve)}), 400
+
+    except Exception as e:
+        # Handle unexpected errors
+        return jsonify({"success": False, "message": f"Error registering user: {e}"}), 500
 
 
 
@@ -340,7 +437,6 @@ def delete_budget():
 @main.route('/logout')
 def logout():
     session.clear()  # Clear session data
-    flash('You have been logged out successfully.', 'info')
     return redirect(url_for('main.login'))
 
 

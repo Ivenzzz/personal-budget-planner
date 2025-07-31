@@ -124,34 +124,33 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
-        // Income Chart
+        // Income Chart (Pie)
         fetch("/api/income-totals")
             .then(response => response.json())
             .then(data => {
                 const labels = data.map(item => item.category_name);
                 const amounts = data.map(item => item.total_amount);
+                const colors = data.map(item => item.color); // ✅ Use category colors
 
                 const ctx = document.getElementById("incomeChart").getContext("2d");
                 new Chart(ctx, {
-                    type: "doughnut",
+                    type: "pie", // ✅ Pie chart
                     data: {
                         labels: labels,
                         datasets: [{
                             data: amounts,
-                            backgroundColor: [
-                                "#3B82F6", "#10B981", "#F59E0B", "#EF4444",
-                                "#8B5CF6", "#EC4899", "#14B8A6", "#6366F1",
-                                "#84CC16", "#F97316"
-                            ],
+                            backgroundColor: colors, // ✅ Dynamically set colors
                             borderWidth: 1
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        cutout: "70%",
                         plugins: {
-                            legend: { position: "bottom", labels: { color: "#374151" } },
+                            legend: {
+                                position: "bottom",
+                                labels: { color: "#374151" }
+                            },
                             tooltip: {
                                 callbacks: {
                                     label: context => `${context.label}: ₱${parseFloat(context.raw).toLocaleString()}`
@@ -163,12 +162,15 @@
             })
             .catch(error => console.error("Error loading income chart:", error));
 
-        // Expense Chart
+
+
+        /// Expense Chart
         fetch("/api/expense-totals")
             .then(response => response.json())
             .then(data => {
                 const labels = data.map(item => item.category_name);
                 const amounts = data.map(item => item.total_amount);
+                const colors = data.map(item => item.color); // ✅ Use dynamic colors from API
 
                 const ctx = document.getElementById("expenseChart").getContext("2d");
                 new Chart(ctx, {
@@ -177,11 +179,7 @@
                         labels: labels,
                         datasets: [{
                             data: amounts,
-                            backgroundColor: [
-                                "#F87171", "#FB923C", "#FBBF24", "#A78BFA",
-                                "#60A5FA", "#34D399", "#F472B6", "#4ADE80",
-                                "#38BDF8", "#E879F9"
-                            ],
+                            backgroundColor: colors, // ✅ Dynamically set colors
                             borderWidth: 1
                         }]
                     },
@@ -190,7 +188,10 @@
                         maintainAspectRatio: false,
                         cutout: "70%",
                         plugins: {
-                            legend: { position: "bottom", labels: { color: "#374151" } },
+                            legend: {
+                                position: "bottom",
+                                labels: { color: "#374151" }
+                            },
                             tooltip: {
                                 callbacks: {
                                     label: context => `${context.label}: ₱${parseFloat(context.raw).toLocaleString()}`

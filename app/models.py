@@ -4,6 +4,7 @@ import bcrypt
 from flask import current_app
 from datetime import datetime
 import calendar
+from werkzeug.security import generate_password_hash
 
 # -------------------- JSON UTILS --------------------
 def load_json(filename):
@@ -39,16 +40,29 @@ def get_user_by_username(username):
     users = load_json('users.json')
     return next((u for u in users if u['username'] == username), None)
 
-def create_user(username, password, user_type='user'):
+def register_user_model(username, password):
+    """Handles user registration logic and saves to users.json."""
     users = load_json('users.json')
+
+    # ✅ Check if username already exists
+    if any(u['username'].lower() == username.lower() for u in users):
+        raise ValueError("Username already exists.")
+
+    # ✅ Hash the password using bcrypt
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    # ✅ Create new user entry
     new_user = {
-        "id": len(users) + 1,
+        "id": (max([u['id'] for u in users]) + 1) if users else 1,
         "username": username,
-        "password": hash_password(password),
-        "type": user_type
+        "password": hashed_password,
+        "type": "user",
+        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
+
     users.append(new_user)
     save_json('users.json', users)
+    return new_user
 
 # -------------------- TRANSACTION FUNCTIONS --------------------
 def get_user_transactions(user_id):
@@ -66,23 +80,54 @@ def get_user_transactions(user_id):
 
 def add_transaction(user_id, category_id, t_type, amount, description, date):
     transactions = load_json('transactions.json')
+    budgets = load_json('budgets.json')
+    amount = float(amount)
 
-    # Combine the provided date with the current time
+    # ✅ Combine provided date with current time
     current_time = datetime.now().strftime("%H:%M:%S")
-    transaction_datetime = f"{date} {current_time}"  # e.g., "2025-07-30 14:35:22"
+    transaction_datetime = f"{date} {current_time}"
 
+    # ✅ Check if this is an expense and validate against budget
+    if t_type == "expense":
+        month = int(datetime.strptime(date, "%Y-%m-%d").month)
+        year = int(datetime.strptime(date, "%Y-%m-%d").year)
+
+        # Find the budget entry for this category, month, and year
+        budget_entry = next(
+            (b for b in budgets if int(b["user_id"]) == int(user_id) 
+             and int(b["category_id"]) == int(category_id) 
+             and int(b["month"]) == month 
+             and int(b["year"]) == year), 
+            None
+        )
+
+        if budget_entry:
+            available_budget = float(budget_entry["budget_amount"]) - float(budget_entry["consumed"])
+            if amount > available_budget:
+                raise ValueError(f"Insufficient budget! Available: ₱{available_budget:,.2f}, Tried: ₱{amount:,.2f}")
+            
+            # ✅ Update consumed budget
+            budget_entry["consumed"] += amount
+        else:
+            raise ValueError("No budget set for this category for the current month!")
+
+        # Save updated budget
+        save_json('budgets.json', budgets)
+
+    # ✅ Add the transaction if budget is okay (or if it's income)
     new_tx = {
         "id": len(transactions) + 1,
         "user_id": user_id,
         "category_id": category_id,
         "type": t_type,
-        "amount": float(amount),
+        "amount": amount,
         "description": description,
-        "transaction_date": transaction_datetime  # ✅ Date + Time stored here
+        "transaction_date": transaction_datetime
     }
 
     transactions.append(new_tx)
     save_json('transactions.json', transactions)
+
 
 # -------------------- SUMMARY FUNCTIONS --------------------
 def get_total_expenses(user_id):
@@ -116,8 +161,8 @@ def get_all_expense_transactions(user_id):
     transactions = load_json('transactions.json')
     categories = load_json('categories.json')
 
-    # Map category IDs to names
-    category_map = {int(c['id']): c['name'] for c in categories}
+    # Map category IDs to names and colors
+    category_map = {int(c['id']): {"name": c["name"], "color": c["color"]} for c in categories}
 
     expenses = []
     for t in transactions:
@@ -130,37 +175,53 @@ def get_all_expense_transactions(user_id):
                 except ValueError:
                     tx_date = datetime.strptime(tx_date, "%Y-%m-%d")  # fallback for old data
 
+            category_info = category_map.get(int(t["category_id"]), {"name": "Unknown", "color": "#CCCCCC"})
+
             expenses.append({
                 **t,
                 "category_id": int(t["category_id"]),
                 "user_id": int(t["user_id"]),
                 "amount": float(t["amount"]),
-                "category_name": category_map.get(int(t["category_id"]), "Unknown"),
+                "category_name": category_info["name"],   # ✅ Include name
+                "category_color": category_info["color"], # ✅ Include color
                 "transaction_date": tx_date,  # ✅ Now it's a datetime object
             })
 
     return expenses
 
+
 def get_all_income_transactions(user_id):
     transactions = load_json('transactions.json')
     categories = load_json('categories.json')
 
-    category_map = {int(c['id']): c['name'] for c in categories}
+    # Map category IDs to names and colors
+    category_map = {int(c['id']): {"name": c["name"], "color": c["color"]} for c in categories}
 
     incomes = []
     for t in transactions:
         if t["type"] == "income" and int(t["user_id"]) == int(user_id):
+            # ✅ Convert transaction_date safely
+            tx_date = t["transaction_date"]
+            if isinstance(tx_date, str):
+                try:
+                    tx_date = datetime.strptime(tx_date, "%Y-%m-%d %H:%M:%S")
+                except ValueError:
+                    tx_date = datetime.strptime(tx_date, "%Y-%m-%d")
+
+            category_info = category_map.get(int(t["category_id"]), {"name": "Unknown", "color": "#CCCCCC"})
+
             incomes.append({
                 **t,
                 "category_id": int(t["category_id"]),
                 "user_id": int(t["user_id"]),
                 "amount": float(t["amount"]),
-                "category_name": category_map.get(int(t["category_id"]), "Unknown"),
-                "transaction_date": datetime.strptime(
-                    t["transaction_date"], "%Y-%m-%d %H:%M:%S" if " " in t["transaction_date"] else "%Y-%m-%d"
-                )
+                "category_name": category_info["name"],   # ✅ Include name
+                "category_color": category_info["color"], # ✅ Include color
+                "transaction_date": tx_date,
             })
+
     return incomes
+
 
 
 
@@ -184,17 +245,19 @@ def get_expense_totals_by_category(user_id):
 
     for cat in get_all_expense_categories():
         total = sum(
-            t['amount'] 
-            for t in transactions 
+            t['amount']
+            for t in transactions
             if int(t['category_id']) == int(cat['id'])  # ✅ Ensure both are int
         )
         if total > 0:
             results.append({
                 "category_name": cat['name'],
-                "total_amount": total
+                "total_amount": total,
+                "color": cat.get('color', '#000000')  # ✅ Include category color (fallback to black if missing)
             })
 
     return results
+
 
 
 def get_income_totals_by_category(user_id):
@@ -206,14 +269,17 @@ def get_income_totals_by_category(user_id):
             t['amount']
             for t in transactions
             if int(t['category_id']) == int(cat['id'])  # ✅ normalize IDs
+            and t["type"] == "income"  # ✅ ensure only income transactions
         )
         if total > 0:
             results.append({
                 "category_name": cat['name'],
-                "total_amount": total
+                "total_amount": total,
+                "color": cat.get('color', '#000000')  # ✅ include category color (default black)
             })
     
     return results
+
 
 
 def get_daily_expenses():
@@ -399,22 +465,38 @@ def delete_budget_entry(budget_id):
     save_json('budgets.json', budgets)
 
 
-def add_expense_category(name, color, category_type):
+def add_expense_category(user_id, name, color, category_type):
     categories = load_json('categories.json')
 
-    # Generate a new ID (incremental)
+    # Generate new incremental ID
     new_id = max([c['id'] for c in categories], default=0) + 1
 
-    # Create new category record
     new_category = {
         "id": new_id,
+        "user_id": int(user_id),
         "name": name,
+        "type": category_type,  # "expense"
         "color": color,
-        "type": category_type  # e.g., "expense"
+        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # ✅ Add timestamp
     }
 
     categories.append(new_category)
     save_json('categories.json', categories)
+
+
+def delete_category(category_id, user_id):
+    categories = load_json('categories.json')
+    categories = [c for c in categories if not (c['id'] == category_id and c['user_id'] == user_id)]
+    save_json('categories.json', categories)
+
+
+def delete_income_transaction(income_id, user_id):
+    transactions = load_json('transactions.json')
+    transactions = [
+        t for t in transactions 
+        if not (t['id'] == income_id and t['user_id'] == user_id and t['type'] == 'income')
+    ]
+    save_json('transactions.json', transactions)
 
 
 

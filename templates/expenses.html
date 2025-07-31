@@ -2,6 +2,11 @@
 
 {% block title %}Expenses{% endblock %}
 
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='static/css/expenses.css') }}">
+{% endblock %}
+
+
 {% block content %}
 <div class="row">
     <div class="col-12">
@@ -9,10 +14,23 @@
             <h4 class="fw-semibold mb-3"><i class="bx bx-category me-2"></i>Expense Categories</h4>
             <div class="d-flex flex-wrap gap-2 mb-4">
                 {% for category in categories %}
-                <span class="badge rounded-pill px-3 py-2"
-                    style="border: 1px solid {{ category.color }}; color: {{ category.color }}; background-color: rgba(0, 0, 0, 0);">
-                    <i class="bx bx-purchase-tag-alt me-1"></i> {{ category.name }}
-                </span>
+                <div class="position-relative d-inline-block category-badge">
+                    <span class="badge rounded-pill px-3 py-2"
+                        style="border: 1px solid {{ category.color }}; color: {{ category.color }}; background-color: rgba(0, 0, 0, 0);">
+                        <i class="bx bx-purchase-tag-alt me-1"></i> {{ category.name }}
+                    </span>
+
+                    {% if category.user_id %}
+                    <!-- ❌ Delete (X) button, shown only on hover -->
+                    <form action="/categories/delete/{{ category.id }}" method="POST"
+                        class="position-absolute top-0 end-0 translate-middle">
+                        <button type="submit" class="btn btn-sm btn-danger p-0 border-0 rounded-circle delete-btn"
+                            title="Delete Category">
+                            <i class="bx bx-x"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
                 {% endfor %}
 
                 <!-- ➕ Add Category Button -->
@@ -21,6 +39,7 @@
                     <i class="bx bx-plus"></i> Add
                 </button>
             </div>
+
         </div>
     </div>
     <div class="col-12 p-2">
@@ -40,14 +59,18 @@
                     </thead>
                     <tbody>
                         {% for expense in expenses %}
-                        <tr>
+                        <tr style="background-color: {{ expense.category_color }}20;"> {# Light background tint #}
                             <td>{{ expense.transaction_date.strftime('%d %b %Y') }}</td>
-                            <td>{{ expense.category_name }}</td>
-                            <td>{{ expense.description or '—' }}</td>
-                            <td class="text-end text-danger fw-semibold">₱{{ "{:,.2f}".format(expense.amount) }}
+                            <td>
+                                <span class="badge rounded-pill px-2"
+                                    style="background-color: {{ expense.category_color }}; color: white;">
+                                    {{ expense.category_name }}
+                                </span>
                             </td>
+                            <td>{{ expense.description or '—' }}</td>
+                            <td class="text-end text-danger fw-semibold">₱{{ "{:,.2f}".format(expense.amount) }}</td>
                             <td class="text-center">
-                                <!-- Edit Button (triggers modal) -->
+                                <!-- Edit Button -->
                                 <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal"
                                     data-bs-target="#editExpenseModal{{ expense.id }}">
                                     <i class="bx bx-edit"></i> Edit
@@ -122,7 +145,6 @@
                         </div>
                         {% endfor %}
                     </tbody>
-
                 </table>
             </div>
         </div>

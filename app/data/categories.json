@@ -121,8 +121,10 @@
     },
     {
         "id": 16,
-        "name": "Test Category",
-        "color": "#143971",
-        "type": "expense"
+        "user_id": 1,
+        "name": "Test",
+        "type": "expense",
+        "color": "#0d6efd",
+        "created_at": "2025-07-31 10:04:39"
     }
 ]
